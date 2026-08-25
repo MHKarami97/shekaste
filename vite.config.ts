@@ -50,7 +50,8 @@ export default defineConfig({
         type: "module",
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,woff2}"],      
+        globIgnores: ["**/favicon.svg", "**/icons.svg"],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
