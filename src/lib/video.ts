@@ -10,6 +10,7 @@ async function getFFmpeg(): Promise<FFmpeg> {
       const { FFmpeg } = await import("@ffmpeg/ffmpeg");
       const { toBlobURL } = await import("@ffmpeg/util");
       const ffmpeg = new FFmpeg();
+
       ffmpeg.on("log", ({ message }) => console.log("[ffmpeg]", message));
 
       try {
@@ -21,7 +22,6 @@ async function getFFmpeg(): Promise<FFmpeg> {
           `${CORE_BASE}/ffmpeg-core.wasm`,
           "application/wasm",
         );
-        console.log("[ffmpeg] coreURL/wasmURL blobs created, loading...");
         await ffmpeg.load({ coreURL, wasmURL });
         console.log("[ffmpeg] loaded successfully");
       } catch (err) {
@@ -44,6 +44,14 @@ export interface VideoOptions {
   onProgress?: (ratio: number) => void;
 }
 
+// "frame=  42 fps=... time=00:00:03.40 bitrate=..." -> 3.40 (ثانیه)
+function parseTimeSeconds(message: string): number | null {
+  const m = message.match(/time=(\d{2}):(\d{2}):(\d{2}(?:\.\d+)?)/);
+  if (!m) return null;
+  const [, hh, mm, ss] = m;
+  return Number(hh) * 3600 + Number(mm) * 60 + Number(ss);
+}
+
 export async function makeVideo({
   imageBlob,
   audioFile,
@@ -53,17 +61,24 @@ export async function makeVideo({
   const { fetchFile } = await import("@ffmpeg/util");
   const ffmpeg = await getFFmpeg();
 
-  const onLog = ({ progress }: { progress: number }) => {
-    onProgress?.(Math.min(1, Math.max(0, progress)));
+  const targetSeconds = Math.max(1, Math.round(duration));
+
+  const onLog = ({ message }: { message: string }) => {
+    const t = parseTimeSeconds(message);
+    if (t !== null) {
+      onProgress?.(Math.min(1, Math.max(0, t / targetSeconds)));
+    }
   };
-  ffmpeg.on("progress", onLog);
+  ffmpeg.on("log", onLog);
 
   const audioExt = (audioFile.name.split(".").pop() || "mp3").toLowerCase();
 
   try {
+    onProgress?.(0);
     await ffmpeg.writeFile("poster.png", await fetchFile(imageBlob));
     await ffmpeg.writeFile(`track.${audioExt}`, await fetchFile(audioFile));
 
+    console.log("[ffmpeg] exec starting...");
     await ffmpeg.exec([
       "-loop",
       "1",
@@ -72,7 +87,7 @@ export async function makeVideo({
       "-i",
       `track.${audioExt}`,
       "-t",
-      String(Math.max(1, Math.round(duration))),
+      String(targetSeconds),
       "-vf",
       "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p",
       "-c:v",
@@ -88,6 +103,8 @@ export async function makeVideo({
       "+faststart",
       "output.mp4",
     ]);
+    console.log("[ffmpeg] exec finished");
+    onProgress?.(1);
 
     const data = await ffmpeg.readFile("output.mp4");
     const bytes =
@@ -96,7 +113,7 @@ export async function makeVideo({
         : new TextEncoder().encode(String(data));
     return new Blob([new Uint8Array(bytes)], { type: "video/mp4" });
   } finally {
-    ffmpeg.off("progress", onLog);
+    ffmpeg.off("log", onLog);
     await Promise.allSettled([
       ffmpeg.deleteFile("poster.png"),
       ffmpeg.deleteFile(`track.${audioExt}`),
