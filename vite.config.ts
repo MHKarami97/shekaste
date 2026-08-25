@@ -14,9 +14,9 @@ export default defineConfig({
       includeAssets: ["favicon.ico", "apple-touch-icon.png"],
       manifest: {
         id: ".",
-        name: "Shekaste",
-        short_name: "Shekaste",
-        description: "Free Persian poetry page maker",
+        name: "شکسته",
+        short_name: "شکسته",
+        description: "شعر نویس فارسی",
         lang: "fa",
         dir: "rtl",
         start_url: ".",
