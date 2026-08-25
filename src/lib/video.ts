@@ -68,9 +68,9 @@ export async function makeVideo({ imageBlob, audioFile, duration, onProgress }: 
       "output.mp4",
     ]);
 
-    const data = await ffmpeg.readFile("output.mp4");
+        const data = await ffmpeg.readFile("output.mp4");
     const bytes = data instanceof Uint8Array ? data : new TextEncoder().encode(String(data));
-    return new Blob([bytes], { type: "video/mp4" });
+    return new Blob([new Uint8Array(bytes)], { type: "video/mp4" });
   } finally {
     ffmpeg.off("progress", onLog);
     await Promise.allSettled([
