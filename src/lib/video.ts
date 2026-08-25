@@ -44,7 +44,6 @@ export interface VideoOptions {
   onProgress?: (ratio: number) => void;
 }
 
-// "frame=  42 fps=... time=00:00:03.40 bitrate=..." -> 3.40 (ثانیه)
 function parseTimeSeconds(message: string): number | null {
   const m = message.match(/time=(\d{2}):(\d{2}):(\d{2}(?:\.\d+)?)/);
   if (!m) return null;
@@ -87,11 +86,13 @@ export async function makeVideo({
       "-i",
       `track.${audioExt}`,
       "-t",
-      String(targetSeconds),
+      String(targetSeconds),    
       "-vf",
-      "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p",
+      "scale=trunc(iw/2)*2:trunc(ih/2)*2,fps=15,format=yuv420p",
       "-c:v",
       "libx264",
+      "-preset",
+      "ultrafast",
       "-tune",
       "stillimage",
       "-c:a",

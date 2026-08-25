@@ -224,7 +224,7 @@ export default function App() {
         return;
       }
       setVideoProgress(0);
-      const imageBlob = await capturePng(node, exportOpts);
+      const imageBlob = await capturePng(node, { ...exportOpts, scale: 1 });
       const blob = await makeVideo({
         imageBlob,
         audioFile: videoAudio,
