@@ -66,3 +66,9 @@ export async function copyPng(node: HTMLElement, opts: ExportOptions) {
   if (!blob) throw new Error('render produced no image')
   await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
 }
+
+export async function capturePng(node: HTMLElement, opts: ExportOptions): Promise<Blob> {
+  const blob = await capture(node, opts, (n, cfg) => toBlob(n, cfg));
+  if (!blob) throw new Error("render produced no image");
+  return blob;
+}

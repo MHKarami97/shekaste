@@ -46,13 +46,22 @@ export default defineConfig({
         ],
       },
       devOptions: {
-        enabled: true,
+        enabled: false,
         type: "module",
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,woff2}"],      
-        globIgnores: ["**/favicon.svg", "**/icons.svg"],
+        globPatterns: ["**/*.{js,css,html,ico,png,woff2}"],
+        globIgnores: ["**/favicon.svg", "**/icons.svg", "**/ffmpeg/**"],
         runtimeCaching: [
+          {
+            urlPattern: /\/ffmpeg\/ffmpeg-core\.(js|wasm)$/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "ffmpeg-core",
+              expiration: { maxEntries: 4, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: "StaleWhileRevalidate",
