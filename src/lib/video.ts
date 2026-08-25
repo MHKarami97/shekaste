@@ -13,8 +13,14 @@ async function getFFmpeg(): Promise<FFmpeg> {
       ffmpeg.on("log", ({ message }) => console.log("[ffmpeg]", message));
 
       try {
-        const coreURL = await toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, "text/javascript");
-        const wasmURL = await toBlobURL(`${CORE_BASE}/ffmpeg-core.wasm`, "application/wasm");
+        const coreURL = await toBlobURL(
+          `${CORE_BASE}/ffmpeg-core.js`,
+          "text/javascript",
+        );
+        const wasmURL = await toBlobURL(
+          `${CORE_BASE}/ffmpeg-core.wasm`,
+          "application/wasm",
+        );
         console.log("[ffmpeg] coreURL/wasmURL blobs created, loading...");
         await ffmpeg.load({ coreURL, wasmURL });
         console.log("[ffmpeg] loaded successfully");
@@ -38,7 +44,12 @@ export interface VideoOptions {
   onProgress?: (ratio: number) => void;
 }
 
-export async function makeVideo({ imageBlob, audioFile, duration, onProgress }: VideoOptions): Promise<Blob> {
+export async function makeVideo({
+  imageBlob,
+  audioFile,
+  duration,
+  onProgress,
+}: VideoOptions): Promise<Blob> {
   const { fetchFile } = await import("@ffmpeg/util");
   const ffmpeg = await getFFmpeg();
 
@@ -54,22 +65,35 @@ export async function makeVideo({ imageBlob, audioFile, duration, onProgress }: 
     await ffmpeg.writeFile(`track.${audioExt}`, await fetchFile(audioFile));
 
     await ffmpeg.exec([
-      "-loop", "1",
-      "-i", "poster.png",
-      "-i", `track.${audioExt}`,
-      "-t", String(Math.max(1, Math.round(duration))),
-      "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p",
-      "-c:v", "libx264",
-      "-tune", "stillimage",
-      "-c:a", "aac",
-      "-b:a", "192k",
+      "-loop",
+      "1",
+      "-i",
+      "poster.png",
+      "-i",
+      `track.${audioExt}`,
+      "-t",
+      String(Math.max(1, Math.round(duration))),
+      "-vf",
+      "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p",
+      "-c:v",
+      "libx264",
+      "-tune",
+      "stillimage",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "192k",
       "-shortest",
-      "-movflags", "+faststart",
+      "-movflags",
+      "+faststart",
       "output.mp4",
     ]);
 
-        const data = await ffmpeg.readFile("output.mp4");
-    const bytes = data instanceof Uint8Array ? data : new TextEncoder().encode(String(data));
+    const data = await ffmpeg.readFile("output.mp4");
+    const bytes =
+      data instanceof Uint8Array
+        ? data
+        : new TextEncoder().encode(String(data));
     return new Blob([new Uint8Array(bytes)], { type: "video/mp4" });
   } finally {
     ffmpeg.off("progress", onLog);
