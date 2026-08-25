@@ -21,6 +21,7 @@ import { applyTheme, getInitialTheme, type Theme } from "./lib/theme";
 import { makeVideo, type VideoEffect } from "./lib/video";
 import { capturePng } from "./lib/export";
 import { Slider, Chips } from "./components/ui";
+import UpdatePrompt from "./components/UpdatePrompt";
 
 const DRAFT_KEY = "shekaste:draft";
 
@@ -528,6 +529,7 @@ export default function App() {
           {toast.text}
         </div>
       )}
+      <UpdatePrompt />
     </div>
   );
 }
