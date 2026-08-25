@@ -11,7 +11,7 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
-      includeAssets: ["favicon.ico", "favicon.svg", "icons.svg", "apple-touch-icon.png"],
+      includeAssets: ["favicon.ico", "apple-touch-icon.png"],
       manifest: {
         id: ".",
         name: "Shekaste",
