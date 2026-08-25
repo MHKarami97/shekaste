@@ -7,6 +7,5 @@ export const BRAND = {
   faTagline: 'شکسته',
   faSoon: 'به‌زودی',
   faPitch: 'شعر ساز فارسی',
-
   enTeaser: 'Shekaste',
 }
