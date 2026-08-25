@@ -61,7 +61,7 @@ export const INITIAL: PoemState = {
   lineHeight: 1.85,
   letterSpacing: 0,
   beitGap: 0.7,
-  showPageNumber: true,
+  showPageNumber: false,
   pageNumber: 1,
   persianDigits: true,
   align: 'center',
