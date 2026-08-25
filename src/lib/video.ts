@@ -37,7 +37,19 @@ async function getFFmpeg(): Promise<FFmpeg> {
   return ffmpegPromise;
 }
 
-export type VideoEffect = "none" | "fade" | "zoom" | "zoom-fade";
+export type VideoEffect =
+  | "none"
+  | "fade"
+  | "zoom-in"
+  | "zoom-in-fade"
+  | "zoom-out"
+  | "zoom-out-fade"
+  | "pan-right"
+  | "pan-right-fade"
+  | "pan-left"
+  | "pan-left-fade"
+  | "pan-down"
+  | "pan-down-fade";
 
 export interface VideoOptions {
   imageBlob: Blob;
@@ -62,12 +74,38 @@ function buildFilter(
   height: number,
   targetSeconds: number,
 ): string {
-  const zoomOn = effect === "zoom" || effect === "zoom-fade";
-  const fadeOn = effect === "fade" || effect === "zoom-fade";
+  const fadeOn = effect.includes("fade");
+  const effectType = effect.replace("-fade", "");
 
-  const base = zoomOn
-    ? `scale=${Math.round(width * 1.2)}:${Math.round(height * 1.2)},zoompan=z='min(zoom+0.0012,1.15)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${width}x${height}:fps=15`
-    : `scale=trunc(iw/2)*2:trunc(ih/2)*2,fps=15`;
+  // Make sure output dimensions are strictly even numbers for yuv420p format compatibility
+  const outW = width % 2 === 0 ? width : width + 1;
+  const outH = height % 2 === 0 ? height : height + 1;
+
+  let base = `scale=${outW}:${outH},fps=15`;
+
+  const totalFrames = targetSeconds * 15;
+  // Set explicit duration to prevent zoompan internal reset
+  const d = totalFrames + 100;
+
+  // Scale up the image by 20% to allow space for panning and zooming without losing quality
+  const scaledW = Math.round(width * 1.2);
+  const scaledH = Math.round(height * 1.2);
+  const sW = scaledW % 2 === 0 ? scaledW : scaledW + 1;
+  const sH = scaledH % 2 === 0 ? scaledH : scaledH + 1;
+
+  const zScale = `scale=${sW}:${sH}`;
+
+  if (effectType === "zoom-in" || effectType === "zoom") {
+    base = `${zScale},zoompan=z='min(1+0.15*(on/${totalFrames}),1.15)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${d}:s=${outW}x${outH}:fps=15`;
+  } else if (effectType === "zoom-out") {
+    base = `${zScale},zoompan=z='max(1.15-0.15*(on/${totalFrames}),1)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${d}:s=${outW}x${outH}:fps=15`;
+  } else if (effectType === "pan-right") {
+    base = `${zScale},zoompan=z='1.15':x='(iw-iw/zoom)*(on/${totalFrames})':y='ih/2-(ih/zoom/2)':d=${d}:s=${outW}x${outH}:fps=15`;
+  } else if (effectType === "pan-left") {
+    base = `${zScale},zoompan=z='1.15':x='(iw-iw/zoom)*(1-(on/${totalFrames}))':y='ih/2-(ih/zoom/2)':d=${d}:s=${outW}x${outH}:fps=15`;
+  } else if (effectType === "pan-down") {
+    base = `${zScale},zoompan=z='1.15':x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(on/${totalFrames})':d=${d}:s=${outW}x${outH}:fps=15`;
+  }
 
   const fadeOutStart = Math.max(0, targetSeconds - 0.6);
   const fade = fadeOn
@@ -94,11 +132,12 @@ export async function makeVideo({
   const onLog = ({ message }: { message: string }) => {
     const t = parseTimeSeconds(message);
     if (t !== null) {
-      onProgress?.(Math.min(1, Math.max(0, t / targetSeconds)));
+      // Progress calculation up to 90%, remaining 10% is for attaching the thumbnail
+      onProgress?.(Math.min(0.9, Math.max(0, t / targetSeconds) * 0.9));
     }
   };
-  ffmpeg.on("log", onLog);
 
+  ffmpeg.on("log", onLog);
   const audioExt = (audioFile.name.split(".").pop() || "mp3").toLowerCase();
 
   try {
@@ -107,8 +146,9 @@ export async function makeVideo({
     await ffmpeg.writeFile(`track.${audioExt}`, await fetchFile(audioFile));
 
     const vf = buildFilter(effect, width, height, targetSeconds);
-    console.log("[ffmpeg] exec starting...", { effect, vf });
+    console.log("[ffmpeg] stage 1: rendering video...", { effect, vf });
 
+    // Stage 1: Render the video
     await ffmpeg.exec([
       "-loop",
       "1",
@@ -131,10 +171,33 @@ export async function makeVideo({
       "-b:a",
       "192k",
       "-shortest",
+      "temp.mp4",
+    ]);
+
+    console.log("[ffmpeg] stage 2: attaching thumbnail...");
+    onProgress?.(0.95);
+
+    // Stage 2: Mux the poster as the thumbnail (attached_pic)
+    await ffmpeg.exec([
+      "-i",
+      "temp.mp4",
+      "-i",
+      "poster.png",
+      "-map",
+      "0",
+      "-map",
+      "1",
+      "-c",
+      "copy",
+      "-c:v:1",
+      "png",
+      "-disposition:v:1",
+      "attached_pic",
       "-movflags",
       "+faststart",
       "output.mp4",
     ]);
+
     console.log("[ffmpeg] exec finished");
     onProgress?.(1);
 
@@ -143,12 +206,14 @@ export async function makeVideo({
       data instanceof Uint8Array
         ? data
         : new TextEncoder().encode(String(data));
+
     return new Blob([new Uint8Array(bytes)], { type: "video/mp4" });
   } finally {
     ffmpeg.off("log", onLog);
     await Promise.allSettled([
       ffmpeg.deleteFile("poster.png"),
       ffmpeg.deleteFile(`track.${audioExt}`),
+      ffmpeg.deleteFile("temp.mp4"),
       ffmpeg.deleteFile("output.mp4"),
     ]);
   }

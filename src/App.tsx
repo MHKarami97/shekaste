@@ -392,8 +392,16 @@ export default function App() {
                     options={[
                       { id: "none", label: "بدون افکت" },
                       { id: "fade", label: "محو شدن" },
-                      { id: "zoom", label: "زوم آرام" },
-                      { id: "zoom-fade", label: "زوم + محو شدن" },
+                      { id: "zoom-in", label: "زوم به داخل" },
+                      { id: "zoom-in-fade", label: "زوم به داخل + محو" },
+                      { id: "zoom-out", label: "زوم به بیرون" },
+                      { id: "zoom-out-fade", label: "زوم به بیرون + محو" },
+                      { id: "pan-right", label: "حرکت به راست" },
+                      { id: "pan-right-fade", label: "راست + محو" },
+                      { id: "pan-left", label: "حرکت به چپ" },
+                      { id: "pan-left-fade", label: "چپ + محو" },
+                      { id: "pan-down", label: "حرکت به پایین" },
+                      { id: "pan-down-fade", label: "پایین + محو" },
                     ]}
                     columns={2}
                     value={videoEffect}
