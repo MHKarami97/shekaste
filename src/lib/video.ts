@@ -37,10 +37,15 @@ async function getFFmpeg(): Promise<FFmpeg> {
   return ffmpegPromise;
 }
 
+export type VideoEffect = "none" | "fade" | "zoom" | "zoom-fade";
+
 export interface VideoOptions {
   imageBlob: Blob;
   audioFile: File;
   duration: number;
+  width: number;
+  height: number;
+  effect?: VideoEffect;
   onProgress?: (ratio: number) => void;
 }
 
@@ -51,10 +56,34 @@ function parseTimeSeconds(message: string): number | null {
   return Number(hh) * 3600 + Number(mm) * 60 + Number(ss);
 }
 
+function buildFilter(
+  effect: VideoEffect,
+  width: number,
+  height: number,
+  targetSeconds: number,
+): string {
+  const zoomOn = effect === "zoom" || effect === "zoom-fade";
+  const fadeOn = effect === "fade" || effect === "zoom-fade";
+
+  const base = zoomOn
+    ? `scale=${Math.round(width * 1.2)}:${Math.round(height * 1.2)},zoompan=z='min(zoom+0.0012,1.15)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${width}x${height}:fps=15`
+    : `scale=trunc(iw/2)*2:trunc(ih/2)*2,fps=15`;
+
+  const fadeOutStart = Math.max(0, targetSeconds - 0.6);
+  const fade = fadeOn
+    ? `,fade=t=in:st=0:d=0.6,fade=t=out:st=${fadeOutStart}:d=0.6`
+    : "";
+
+  return `${base}${fade},format=yuv420p`;
+}
+
 export async function makeVideo({
   imageBlob,
   audioFile,
   duration,
+  width,
+  height,
+  effect = "none",
   onProgress,
 }: VideoOptions): Promise<Blob> {
   const { fetchFile } = await import("@ffmpeg/util");
@@ -77,7 +106,9 @@ export async function makeVideo({
     await ffmpeg.writeFile("poster.png", await fetchFile(imageBlob));
     await ffmpeg.writeFile(`track.${audioExt}`, await fetchFile(audioFile));
 
-    console.log("[ffmpeg] exec starting...");
+    const vf = buildFilter(effect, width, height, targetSeconds);
+    console.log("[ffmpeg] exec starting...", { effect, vf });
+
     await ffmpeg.exec([
       "-loop",
       "1",
@@ -86,9 +117,9 @@ export async function makeVideo({
       "-i",
       `track.${audioExt}`,
       "-t",
-      String(targetSeconds),    
+      String(targetSeconds),
       "-vf",
-      "scale=trunc(iw/2)*2:trunc(ih/2)*2,fps=15,format=yuv420p",
+      vf,
       "-c:v",
       "libx264",
       "-preset",

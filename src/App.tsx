@@ -18,9 +18,9 @@ import { bumpCounter, readCounter, type CounterState } from "./lib/counter";
 import { BRAND } from "./lib/brand";
 import { Ltr, Mark, SoonTag, Wordmark } from "./components/Wordmark";
 import { applyTheme, getInitialTheme, type Theme } from "./lib/theme";
-import { makeVideo } from "./lib/video";
+import { makeVideo, type VideoEffect } from "./lib/video";
 import { capturePng } from "./lib/export";
-import { Slider } from "./components/ui";
+import { Slider, Chips } from "./components/ui";
 
 const DRAFT_KEY = "shekaste:draft";
 
@@ -51,6 +51,8 @@ export default function App() {
   const [videoAudio, setVideoAudio] = useState<File | null>(null);
   const [videoDuration, setVideoDuration] = useState(15);
   const [videoProgress, setVideoProgress] = useState(0);
+  const [videoFileName, setVideoFileName] = useState<string>("");
+  const [videoEffect, setVideoEffect] = useState<VideoEffect>("none");
 
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
 
@@ -229,12 +231,16 @@ export default function App() {
         imageBlob,
         audioFile: videoAudio,
         duration: videoDuration,
+        width: format.w,
+        height: format.h,
+        effect: videoEffect,
         onProgress: setVideoProgress,
       });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${(state.title || state.poet || "shekaste").replace(/[\\/:*?"<>|]+/g, "-")}-${format.id}.mp4`;
+      const rand = Math.floor(100000 + Math.random() * 900000);
+      a.download = `shekaste.mhkarami97.ir-${rand}.mp4`;
       a.click();
       URL.revokeObjectURL(url);
       setToast({ text: "ویدیو ساخته شد.", tone: "ok" });
@@ -317,7 +323,7 @@ export default function App() {
               </div>
 
               <p className="mt-3 text-[9px] leading-relaxed text-ink-2/85 dark:text-night-ink-2">
-              از این بخش می‌توانید شعر خود را بصورت عکس کپی کنید
+                از این بخش می‌توانید شعر خود را بصورت عکس کپی کنید
               </p>
 
               {made && (
@@ -335,17 +341,41 @@ export default function App() {
                 ساخت ویدیو
               </div>
               <div className="flex flex-col gap-3">
-                <label className="block">
+                <div className="block">
                   <span className="mb-1.5 block text-11px text-ink-2 dark:text-night-ink-2">
                     فایل صوتی
                   </span>
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    onChange={(e) => setVideoAudio(e.target.files?.[0] ?? null)}
-                    className="block w-full text-12px text-ink-2 file:mr-2 file:rounded-lg file:border-0 file:bg-tan/15 file:px-3 file:py-1.5 file:text-tan dark:text-night-ink-2"
-                  />
-                </label>
+                  <label className="flex items-center gap-2 rounded-xl border border-line/60 bg-paper/70 px-3 py-2.5 text-12px text-ink-2 transition hover:border-tan/60 dark:border-night-line dark:bg-night/60 dark:text-night-ink-2">
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0] ?? null;
+                        setVideoAudio(f);
+                        setVideoFileName(f ? f.name : "");
+                      }}
+                    />
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      aria-hidden
+                      className="shrink-0 opacity-70"
+                    >
+                      <path
+                        d="M12 3v12m0-12 4 4m-4-4-4 4M7 15h10"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span className="truncate">
+                      {videoFileName || "انتخاب فایل صوتی"}
+                    </span>
+                  </label>
+                </div>
                 <Slider
                   label="مدت زمان ویدیو"
                   min={3}
@@ -354,6 +384,22 @@ export default function App() {
                   onChange={setVideoDuration}
                   format={(v) => `${v} ثانیه`}
                 />
+                <div className="block">
+                  <span className="mb-1.5 block text-11px text-ink-2 dark:text-night-ink-2">
+                    افکت ویدیو
+                  </span>
+                  <Chips<VideoEffect>
+                    options={[
+                      { id: "none", label: "بدون افکت" },
+                      { id: "fade", label: "محو شدن" },
+                      { id: "zoom", label: "زوم آرام" },
+                      { id: "zoom-fade", label: "زوم + محو شدن" },
+                    ]}
+                    columns={2}
+                    value={videoEffect}
+                    onChange={setVideoEffect}
+                  />
+                </div>
                 <Button
                   variant="primary"
                   onClick={onMakeVideo}
@@ -365,7 +411,7 @@ export default function App() {
                 </Button>
                 <p className="text-[9px] leading-tight text-ink-285 dark:text-night-ink-2">
                   یک عکس ثابت از همین صفحه گرفته می‌شود و صدای انتخابی روی آن
-                  سوار می‌شود. بار اول ممکن است کمی طول بکشد                  
+                  سوار می‌شود. بار اول ممکن است کمی طول بکشد
                 </p>
               </div>
             </section>
