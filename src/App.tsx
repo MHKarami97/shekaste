@@ -188,13 +188,6 @@ export default function App() {
             <Mark className="h-8 w-8 sm:h-9 sm:w-9" />
             <Wordmark className="h-7 sm:h-8" />
             <span className="h-4 w-px shrink-0 bg-line dark:bg-night-line" />
-            <span className="flex min-w-0 flex-col leading-tight">
-              <span className="truncate text-[12px]">{BRAND.faTagline}</span>
-
-              {/* <span className="text-[9.5px] tracking-[0.16em] text-tan">{BRAND.faKicker}</span> */}
-
-            </span>
-
           </span>
 
           <SoonTag className="hidden sm:inline-flex" />
@@ -208,7 +201,7 @@ export default function App() {
 
           )}
           <Button onClick={onCopyLink} className="hidden sm:inline-flex">
-            پیوند
+            لینک
           </Button>
 
           <Button variant="primary" onClick={onDownload} disabled={busy !== null}>
@@ -243,7 +236,7 @@ export default function App() {
             >
               <div className="grid grid-cols-2 gap-2">
                 <Button onClick={onShare} disabled={busy !== null}>
-                  {busy === 'share' ? '…' : 'هم‌رسانی'}
+                  {busy === 'share' ? '…' : 'اشتراک'}
                 </Button>
 
                 <Button onClick={onCopy} disabled={busy !== null}>
@@ -255,15 +248,13 @@ export default function App() {
                 </Button>
 
                 <Button onClick={onReset} className="sm:col-span-2">
-                  بازنشانی
+                  ریست
                 </Button>
 
               </div>
 
               <p className="mt-3 text-[11px] leading-relaxed text-ink-2/85 dark:text-night-ink-2">
-                همه‌چیز در مرورگر شما اجرا می‌شود. متن صفحه به هیچ سروری فرستاده نمی‌شود — پیوند
-                هم‌رسانی، خودِ صفحه را در آدرس نگه می‌دارد. تنها استثنا: عبارتی که در جست‌وجوی
-                گنجور می‌نویسید، به گنجور فرستاده می‌شود.
+                
               </p>
 
               {made && (
@@ -288,7 +279,7 @@ export default function App() {
               </p>
 
               <p className="mt-3">
-                <Ltr className="font-mark text-[13.5px] text-tan">{BRAND.enTeaser}</Ltr>
+                <Ltr className="font-mark text-[13.5px] text-tan"><a href="https://mhkarami97.ir">{BRAND.enTeaser}</a></Ltr>
 
               </p>
 
