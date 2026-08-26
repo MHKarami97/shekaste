@@ -50,6 +50,9 @@ export default defineConfig({
         type: "module",
       },
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         globPatterns: ["**/*.{js,css,html,ico,png,woff2}"],
         globIgnores: ["**/favicon.svg", "**/icons.svg", "**/ffmpeg/**"],
         runtimeCaching: [
