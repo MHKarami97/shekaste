@@ -5,6 +5,7 @@ import Preview from "./components/Preview";
 import { Button } from "./components/ui";
 import { loadChromeFonts, loadFont } from "./lib/fonts";
 import { FORMAT_BY_ID } from "./lib/formats";
+import { exportPdf } from "./lib/pdf";
 import {
   fitFontSize,
   INITIAL,
@@ -247,6 +248,13 @@ export default function App() {
       setToast({ text: "ویدیو ساخته شد.", tone: "ok" });
     });
 
+  const onDownloadPdf = () =>
+    withPage("pdf", async (node) => {
+      const rand = Math.floor(100000 + Math.random() * 900000);
+      await exportPdf(node, exportOpts, `shekaste.mhkarami97.ir-${rand}.pdf`);
+      setToast({ text: "PDF ذخیره شد.", tone: "ok" });
+    });
+
   return (
     <div className="flex h-full flex-col bg-paper text-ink dark:bg-night dark:text-night-ink">
       <header className="anim-fade z-30 flex shrink-0 items-center justify-between gap-2 border-b border-line/50 bg-paper/90 px-3 py-2.5 backdrop-blur-md sm:px-4 dark:border-night-line dark:bg-night/90">
@@ -312,6 +320,14 @@ export default function App() {
 
                 <Button onClick={onCopy} disabled={busy !== null}>
                   {busy === "copy" ? "…" : "کپی تصویر"}
+                </Button>
+
+                <Button
+                  onClick={onDownloadPdf}
+                  className="sm:col-span-2"
+                  disabled={busy !== null}
+                >
+                  {busy === "pdf" ? "…" : "دانلود PDF"}
                 </Button>
 
                 <Button onClick={onCopyLink} className="sm:hidden">
@@ -435,16 +451,10 @@ export default function App() {
               </div>
 
               <p className="mt-2 text-[11px] leading-relaxed text-ink-2 dark:text-night-ink-2">
-                {BRAND.faPitch}
+                {BRAND.faPitch} توسط <a href="https://mhkarami97.ir">mhkarami97</a>
               </p>
 
-              <p className="mt-3">
-                <Ltr className="font-mark text-[13.5px] text-tan">
-                  <a href="https://mhkarami97.ir">{BRAND.enTeaser}</a>
-                </Ltr>
-              </p>
-
-              <div className="mt-3 text-right">
+              <div className="mt-3 text-center">
                 <button
                   type="button"
                   onClick={() =>

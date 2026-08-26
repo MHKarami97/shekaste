@@ -57,7 +57,7 @@ export const INITIAL: PoemState = {
   formatId: DEFAULT_FORMAT,
   layout: 'single',
   ornament: 'rule',
-  fontSize: 52,
+  fontSize: 62,
   lineHeight: 1.85,
   letterSpacing: 0,
   beitGap: 0.7,

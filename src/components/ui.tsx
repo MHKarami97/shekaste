@@ -184,19 +184,21 @@ export function Toggle({
   label,
   checked,
   onChange,
+  disabled = false,
 }: {
   label: string;
   checked: boolean;
   onChange: (v: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
-      onClick={() => onChange(!checked)}
-      className="flex w-full items-center justify-between gap-3 rounded-xl border border-line/60 px-3 py-2 text-[12px] text-ink-2 transition hover:border-tan/60 dark:border-night-line dark:text-night-ink-2"
+      disabled={disabled}
+      onClick={() => !disabled && onChange(!checked)}
+      className="flex w-full items-center justify-between gap-3 rounded-xl border border-line/60 px-3 py-2 text-12px text-ink-2 transition hover:border-tan/60 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-line/60 dark:border-night-line dark:text-night-ink-2"
     >
       <span>{label}</span>
-
       <span
         className={`relative h-5 w-9 shrink-0 rounded-full transition-colors duration-200 ${
           checked ? "bg-tan" : "bg-line/60 dark:bg-night-line"

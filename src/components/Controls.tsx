@@ -290,6 +290,7 @@ export default function Controls({
             label="نشان Shekaste"
             checked={state.watermark}
             onChange={(watermark) => patch({ watermark })}
+            disabled
           />
 
           <Toggle
