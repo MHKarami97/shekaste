@@ -17,7 +17,7 @@ import { encodeState, readHash, shareUrl } from "./lib/share";
 import { copyPng, exportPng, sharePng } from "./lib/export";
 import { bumpCounter, readCounter, type CounterState } from "./lib/counter";
 import { BRAND } from "./lib/brand";
-import { Ltr, Mark, SoonTag, Wordmark } from "./components/Wordmark";
+import { Mark, SoonTag, Wordmark } from "./components/Wordmark";
 import { applyTheme, getInitialTheme, type Theme } from "./lib/theme";
 import { makeVideo, type VideoEffect } from "./lib/video";
 import { capturePng } from "./lib/export";
